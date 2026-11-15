@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XO TipJar — Public tip pages on Bitcoin Cash</title>
+  <meta name="description" content="XO TipJar: create a public tip page with a funding goal, get tipped on-chain via the XO Engine (chipnet). Built for BCH Blaze 2026, Build With XO bounty." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230AC18E'/%3E%3Ctext x='16' y='23' font-size='18' font-family='Arial' font-weight='bold' text-anchor='middle' fill='white'%3ET%3C/text%3E%3C/svg%3E" />
+  <script type="module" crossorigin src="./assets/index-D6-E-KUN.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-jqPPl7Aj.css">
+</head>
+<body>
+  <div id="app">
+    <header class="banner" id="top-banner">
+      <div class="banner-inner">
+        <span class="banner-badge">BCH BLAZE 2026 &middot; Build With XO bounty</span>
+        <nav class="banner-links">
+          <a class="banner-link" href="#how-it-works">How it works</a>
+          <a id="link-repo" class="banner-link" href="https://github.com/slowwwkiss/xo-tipjar" target="_blank" rel="noopener">Source code (GitHub)</a>
+          <a class="banner-link" href="https://stack.xo.cash/getting-started" target="_blank" rel="noopener">XO Stack docs</a>
+        </nav>
+      </div>
+      <div class="banner-sub">
+        <span>Built with the <b>XO Template + XO SDK + XO Wallet</b> on chipnet (testnet). No real BCH moves here — play money only.</span>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="hero">
+        <h1>XO TipJar</h1>
+        <p class="tagline">A public tip page with a funding goal. Create your jar, share the link, and every tip lands on-chain through the XO Engine.</p>
+        <ol class="steps">
+          <li><b>1.</b> Create a tip jar — name, message, target.</li>
+          <li><b>2.</b> Share the link — anyone can open it and tip.</li>
+          <li><b>3.</b> Watch the goal fill — every tip is a real chipnet transaction, listed below with its txid.</li>
+        </ol>
+        <p class="hint">Judges: everything runs on <b>chipnet (testnet)</b>. The app creates a throwaway wallet in your browser and funds it free from the faucet — one click, no install.</p>
+      </section>
+
+      <section class="card" id="wallet-card">
+        <div class="row between">
+          <h2>Your XO wallet (in-browser, chipnet)</h2>
+          <span id="engine-status" class="pill">starting…</span>
+        </div>
+        <p class="muted">A throwaway XO account lives only in this browser. The XO Engine opens it with <code>Engine.create(mnemonic, { network: chipnet })</code>, imports the <code>p2pkhTemplate</code>, and watches its addresses over Electrum.</p>
+        <p>Address: <code id="xo-addr">…</code></p>
+        <p>Balance: <b id="xo-balance">…</b></p>
+        <div class="row gap">
+          <button id="btn-faucet" class="btn" type="button">Get free chipnet BCH</button>
+          <button id="btn-refresh-balance" class="btn" type="button">Refresh balance</button>
+        </div>
+        <p id="engine-error" class="error hidden"></p>
+        <p class="muted small">Faucet trouble? Any chipnet faucet works — send tBCH to the address above. Fallback: <a href="https://tbch.googol.cash/" target="_blank" rel="noopener">tbch.googol.cash</a></p>
+      </section>
+
+      <section class="card" id="create-card">
+        <h2>Create a tip jar</h2>
+        <form id="create-form">
+          <label>Your name / page title
+            <input id="in-name" type="text" maxlength="60" placeholder="e.g. Reza's coffee fund" value="Reza's coffee fund" required />
+          </label>
+          <label>Message to tippers
+            <input id="in-message" type="text" maxlength="180" placeholder="e.g. Tips keep the demos coming!" value="Tips keep the demos coming!" />
+          </label>
+          <label>Funding target (tBCH)
+            <input id="in-target" type="number" min="0.0001" step="0.0001" value="0.01" required />
+          </label>
+          <button class="btn primary" type="submit">Create my tip jar</button>
+        </form>
+        <div id="jar-result" class="hidden">
+          <h3>Your tip jar is live</h3>
+          <p>Share this link anywhere — it opens your public tip page:</p>
+          <label>Tip page link
+            <input id="out-link" type="text" readonly onclick="this.select()" />
+          </label>
+          <div class="row gap">
+            <button id="btn-copy-link" class="btn" type="button">Copy link</button>
+            <a id="btn-open-link" class="btn" href="#" target="_blank" rel="noopener">Open tip page</a>
+          </div>
+          <div class="qr-wrap"><img id="qr-img" alt="QR code for the tip page link" /><p class="muted">Scan to open the tip page on your phone.</p></div>
+        </div>
+      </section>
+
+      <section class="card hidden" id="tip-card">
+        <h2 id="tip-title">Tip this jar</h2>
+        <p id="tip-message" class="muted"></p>
+        <div class="progress-wrap">
+          <div class="progress-bar"><div id="progress-fill" class="progress-fill" style="width:0%"></div></div>
+          <p><b id="progress-raised">0 tBCH</b> raised of <b id="progress-target">—</b> target (<span id="progress-pct">0%</span>)</p>
+        </div>
+        <p>Jar address: <code id="tip-addr">—</code></p>
+        <form id="tip-form">
+          <label>Tip amount (tBCH)
+            <input id="in-tip-amount" type="number" min="0.00001" step="0.00001" value="0.001" required />
+          </label>
+          <label>Your name (shown in the feed)
+            <input id="in-tipper" type="text" maxlength="40" placeholder="e.g. anonymous" value="anonymous" />
+          </label>
+          <button id="btn-tip" class="btn primary" type="submit">Send tip via XO Engine</button>
+        </form>
+        <div id="tip-status" class="status hidden"></div>
+        <div id="tip-receipt" class="receipt hidden">
+          <h3>Tip sent on-chain</h3>
+          <p>Transaction ID: <code id="rc-txid">—</code></p>
+          <p><a id="rc-explorer" href="#" target="_blank" rel="noopener">Verify on the block explorer</a></p>
+          <button id="btn-receipt-copy" class="btn" type="button">Copy txid</button>
+        </div>
+      </section>
+
+      <section class="card" id="feed-card">
+        <div class="row between">
+          <h2>Recent tips</h2>
+          <button id="btn-refresh-feed" class="btn small" type="button">Refresh</button>
+        </div>
+        <p class="muted">Tips recorded by this browser, each with its on-chain transaction. Tips sent from other browsers show up on their own feed — the txid is the proof either way.</p>
+        <ul id="feed-list" class="feed"></ul>
+        <p id="feed-empty" class="muted">No tips yet — be the first to tip a jar above.</p>
+      </section>
+
+      <section class="card" id="jars-card">
+        <div class="row between">
+          <h2>Your tip jars</h2>
+        </div>
+        <ul id="jars-list" class="feed"></ul>
+        <p id="jars-empty" class="muted">No jars created in this browser yet.</p>
+      </section>
+
+      <section class="card" id="how-it-works">
+        <h2>How it works</h2>
+        <ul class="plain">
+          <li><b>XO Engine</b> (<code>@xo-cash/engine</code>) — opens one account per mnemonic on chipnet, connects to Electrum, and builds every transaction from a template. This app follows the official getting-started flow: <code>Engine.create</code> → <code>importTemplate(p2pkhTemplate)</code> → <code>setDefaultPolicies</code> → <code>generateLockingBytecodeFromDefaultPolicy('receive')</code> → invitation (<code>sendSatoshis</code>) → <code>appendInvitation</code> → <code>addChangeToInvitation</code> → <code>signInvitation</code> → <code>executeAction({ broadcastTransaction: true })</code>.</li>
+          <li><b>XO Template</b> (<code>@xo-cash/templates</code>) — the <code>p2pkhTemplate</code> describes the pay-to-public-key-hash use case; the engine trusts the template, not the app, to decide what your keys sign.</li>
+          <li><b>XO Wallet</b> — the throwaway chipnet wallet above is the XO account: its mnemonic never leaves this browser (localStorage, testnet only), and its receive address is the tip jar's address.</li>
+          <li><b>XO State / Utils</b> (<code>@xo-cash/state</code>, <code>@xo-cash/utils</code>) — the engine's account storage and invitation helpers (<code>serializeInvitation</code> / <code>deserializeInvitation</code>).</li>
+          <li><b>libauth</b> (<code>@bitauth/libauth</code>) — cashaddr ↔ locking-bytecode conversion and mnemonic generation.</li>
+          <li><b>No backend, no custody</b> — a static page. A tip jar is just a URL (<code>#/tip?id=…&amp;name=…&amp;target=…&amp;to=…</code>). The goal progress is the sum of recorded tips to that jar's address.</li>
+          <li><b>Different from BlazePay</b> — BlazePay is private one-to-one payment links; TipJar is public tip pages with a funding goal, progress bar, and a public tip feed.</li>
+        </ul>
+      </section>
+
+      <footer class="footer">
+        <p>XO TipJar — built for <a href="https://dorahacks.io/hackathon/bchblaze2026/detail" target="_blank" rel="noopener">BCH Blaze 2026</a>, Build With XO bounty (3 BCH). Open source: <a href="https://github.com/slowwwkiss/xo-tipjar" target="_blank" rel="noopener">github.com/slowwwkiss/xo-tipjar</a>. Chipnet only — no real BCH.</p>
+      </footer>
+    </main>
+  </div>
+  <noscript><p style="padding:1rem">XO TipJar needs JavaScript enabled.</p></noscript>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# .gitignore — XO TipJar
+node_modules/
+.DS_Store
+# Local-only verification tools output (screenshots/video are NOT pushed)
+tools/video/
+tools/*.png
+# The throwaway chipnet mnemonic lives in the browser's localStorage only.
+# Nothing secret is ever written to disk by this project; if that ever
+# changes, keep it out of git:
+*.private.json
+*.mnemonic*
+.env
